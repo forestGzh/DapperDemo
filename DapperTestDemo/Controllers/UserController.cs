@@ -190,5 +190,40 @@ namespace DapperTestDemo.Controllers
                 return result.ToList();
             }
         }
+
+        /// <summary>
+        /// 多表查询  join
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("getUsersJoin2")]
+        public ActionResult<object> GetUsersjoin2()
+        {
+            using (MySqlConnection connection = Connection)
+            {
+                List<User> users = new List<User>();
+
+                string sql = @"select * from users
+                               join project
+                               on users.id = project.user_id";
+
+                var result = connection.Query<User,Project,User>(sql,(user, project) =>
+                {
+                    var list = users.Find(x => x.Id == project.UserId);
+                    if (list == null)
+                    {
+                        user.Projects.Add(project);
+                        users.Add(user);
+                        return user;
+                    }
+                    else
+                    {
+                        list.Projects.Add(project);
+                        return list;
+                    }
+                }, splitOn:"id");
+
+                return users;
+            }
+        }
     }
 }
